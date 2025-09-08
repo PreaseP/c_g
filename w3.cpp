@@ -5,7 +5,7 @@
 
 using namespace std;
 
-typedef struct point_3 {
+typedef struct POINT_3 {
 	int x, y, z;
 	double d;
 	bool val;
