@@ -88,7 +88,7 @@ int main() {
 			for (int i = 0; i < 5; ++i) {
 				for (int j = 0; j < 5; ++j) {
 					board[i][j].ch = ' ';
-					board[i][j].val = true;
+					board[i][j].val = false;
 				}
 			}
 
