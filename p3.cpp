@@ -95,10 +95,10 @@ GLvoid Reshape(int w, int h)
 
 }
 
-void Keyboard(unsigned char key, int x, int y) 
+void Keyboard(unsigned char key, int x, int y)
 {
 	switch (key) {
-	case 'q': 
+	case 'q':
 		exit(0);
 		break;
 
@@ -106,7 +106,7 @@ void Keyboard(unsigned char key, int x, int y)
 		if (rectCnt < 30) {
 			int makeCnt = 10;
 			if (rectCnt + 10 > maxRect) makeCnt = maxRect - rectCnt;
-			
+
 			while (makeCnt) {
 				bool valCheck = false;
 				for (int i = 0; i < rectIdx; ++i) {
@@ -134,7 +134,7 @@ void Keyboard(unsigned char key, int x, int y)
 					}
 					rects[rectIdx].val = true;
 					rectCnt++;
-					if(rectIdx < 29) rectIdx++;
+					if (rectIdx < 29) rectIdx++;
 				}
 				makeCnt--;
 			}
@@ -169,7 +169,7 @@ void Mouse(int button, int state, int x, int y)
 					my <= rects[i].bottom && my >= rects[i].bottom - rects[i].sizeY) {
 					bool valCheck = false;
 					for (int j = 0; j < rectIdx; ++j) {
-						if(rects[j].val == false) {
+						if (rects[j].val == false) {
 							rects[i].sizeX /= 2;
 							rects[i].sizeY /= 2;
 
@@ -200,7 +200,7 @@ void Mouse(int button, int state, int x, int y)
 						}
 						rects[rectIdx].val = true;
 						rectCnt++;
-						if(rectIdx < 29) rectIdx++;
+						if (rectIdx < 29) rectIdx++;
 					}
 					break;
 				}
@@ -211,7 +211,7 @@ void Mouse(int button, int state, int x, int y)
 	drawScene();
 }
 
-void Motion(int x, int y) 
+void Motion(int x, int y)
 {
 	mx = x;
 	my = y;
@@ -226,28 +226,23 @@ void Motion(int x, int y)
 					rects[sel].bottom > rects[i].bottom - rects[i].sizeY &&
 					rects[sel].bottom - rects[sel].sizeY < rects[i].bottom) {
 					if (rects[sel].left > rects[i].left) {
-						if (rects[sel].sizeX > rects[i].sizeX) {
-							rects[sel].sizeX += rects[sel].left - rects[i].left;
-						}
-						else {
-							rects[sel].sizeX = rects[i].sizeX;
-						}
+						rects[sel].sizeX += rects[sel].left - rects[i].left;
 						rects[sel].left = rects[i].left;
 					}
 					else {
-						if (rects[sel].sizeX < rects[i].sizeX) {
-							rects[sel].sizeX = (rects[i].left - rects[sel].left) + rects[sel].sizeX;
+						if (rects[sel].left + rects[sel].sizeX < rects[i].left + rects[i].sizeX) {
+							rects[sel].sizeX += (rects[i].left + rects[i].sizeX) - (rects[sel].left + rects[sel].sizeX);
 						}
 					}
-					
+
 					if (rects[sel].bottom > rects[i].bottom) {
-						if (rects[sel].sizeY < rects[i].sizeY) {
-							rects[sel].sizeY = ( rects[sel].bottom - rects[i].bottom ) + rects[i].sizeY;
+						if (rects[sel].bottom - rects[sel].sizeY > rects[i].bottom - rects[i].sizeY) {
+							rects[sel].sizeY += (rects[sel].bottom - rects[sel].sizeY) - (rects[i].bottom - rects[i].sizeY);
 						}
 					}
 					else {
-						if (rects[sel].sizeY < rects[i].sizeY) {
-							rects[sel].sizeY += rects[i].sizeY;
+						if (rects[sel].bottom - rects[sel].sizeY > rects[i].bottom - rects[i].sizeY) {
+							rects[sel].sizeY = rects[i].sizeY;
 						}
 						else {
 							rects[sel].sizeY += rects[i].bottom - rects[sel].bottom;
