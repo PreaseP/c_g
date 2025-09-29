@@ -37,41 +37,42 @@ typedef struct _CRECT {
 } cRect;
 
 class bRect {
-	public:
-		int left;
-		int bottom;
-		int right;
-		int top;
-		int RGB[3];
+public:
+	int left;
+	int bottom;
+	int right;
+	int top;
+	int RGB[3];
 
-		bRect () {
-			left = 0;
-			bottom = 0;
-			right = 0;
-			top = 0;
-			RGB[0] = 0;
-			RGB[1] = 0;
-			RGB[2] = 0;
-		}
+	bRect() {
+		left = 0;
+		bottom = 0;
+		right = 0;
+		top = 0;
+		RGB[0] = 0;
+		RGB[1] = 0;
+		RGB[2] = 0;
+	}
 
-		void setRect(int l, int b, int r, int t, int R, int G, int B) {
-			this->left = l;
-			this->bottom = b;
-			this->right = r;
-			this->top = t;
-			this->RGB[0] = R;
-			this->RGB[1] = G;
-			this->RGB[2] = B;
-		}
+	void setRect(int l, int b, int r, int t, int R, int G, int B) {
+		this->left = l;
+		this->bottom = b;
+		this->right = r;
+		this->top = t;
+		this->RGB[0] = R;
+		this->RGB[1] = G;
+		this->RGB[2] = B;
+	}
 
-		void drawRect() {
-			glColor3f(c2GLrgb(RGB[0]), c2GLrgb(RGB[1]), c2GLrgb(RGB[2]));
-			glRectf(c2GLx(left), c2GLy(bottom), c2GLx(right), c2GLy(top));
-		}
+	void drawRect() {
+		glColor3f(c2GLrgb(RGB[0]), c2GLrgb(RGB[1]), c2GLrgb(RGB[2]));
+		glRectf(c2GLx(left), c2GLy(bottom), c2GLx(right), c2GLy(top));
+	}
 };
 
 bRect check[10];
 cRect mainRects[10];
+int oriCord[4];
 
 void resetRect(bRect check[10]) {
 	for (int i = 0; i < 10; ++i) {
@@ -198,12 +199,16 @@ void Mouse(int button, int state, int x, int y)
 				sel = i;
 				dragOffsetX = x - mainRects[i].left;
 				dragOffsetY = y - mainRects[i].bottom;
+				oriCord[0] = mainRects[i].left;
+				oriCord[1] = mainRects[i].bottom;
+				oriCord[2] = mainRects[i].right;
+				oriCord[3] = mainRects[i].top;
 				break;
 			}
 		}
 	}
 	else if (button == GLUT_LEFT_BUTTON && state == GLUT_UP) {
-		if(left_click && sel != -1) {
+		if (left_click && sel != -1) {
 			if (mainRects[sel].left >= check[sel].left - 20 && mainRects[sel].right <= check[sel].right + 20
 				&& mainRects[sel].bottom <= check[sel].bottom + 20 && mainRects[sel].top >= check[sel].top - 20) {
 				mainRects[sel].left = check[sel].left;
@@ -211,6 +216,12 @@ void Mouse(int button, int state, int x, int y)
 				mainRects[sel].right = check[sel].right;
 				mainRects[sel].top = check[sel].top;
 				mainRects[sel].val = true;
+			}
+			else {
+				mainRects[sel].left = oriCord[0];
+				mainRects[sel].bottom = oriCord[1];
+				mainRects[sel].right = oriCord[2];
+				mainRects[sel].top = oriCord[3];
 			}
 			left_click = false;
 			sel = -1;
@@ -234,7 +245,7 @@ void Motion(int x, int y)
 }
 
 void TimerFunction(int value)
-{	
+{
 	if (moveSel >= 0) {
 		float alpha = 0.15f;
 
@@ -247,7 +258,7 @@ void TimerFunction(int value)
 		mainRects[moveSel].bottom = (int)(newBottom);
 		mainRects[moveSel].right = (int)(newRight);
 		mainRects[moveSel].top = (int)(newTop);
-		
+
 		if (mainRects[moveSel].left >= check[moveSel].left - 5 && mainRects[moveSel].right <= check[moveSel].right + 5
 			&& mainRects[moveSel].bottom <= check[moveSel].bottom + 5 && mainRects[moveSel].top >= check[moveSel].top - 5) {
 			mainRects[moveSel].left = check[moveSel].left;
