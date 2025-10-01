@@ -225,9 +225,11 @@ GLvoid drawScene()
 	glClearColor(c2GLrgb(bRGB[0]), c2GLrgb(bRGB[1]), c2GLrgb(bRGB[2]), 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
-	// int vColor = glGetUniformLocation(shaderProgramID, "vColor");
+	int vColor = glGetUniformLocation(shaderProgramID, "vColor");
 
 	glUseProgram(shaderProgramID);
+
+	glUniform3f(vColor, 1.0f, 1.0f, 1.0f);
 
 	for (int i = 0; i < shapeIdx +1; ++i) {
 		glBindVertexArray(shapes[i].VAO);
