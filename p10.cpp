@@ -244,7 +244,7 @@ void Keyboard(unsigned char key, int x, int y)
 	}
 	else if (key == '4') {
 		for (int i = 0; i < 4; ++i) {
-			for (int j = 0; j < maxRect[i]; ++j) {
+			for (int j = 0; j < maxShape[i]; ++j) {
 				resetShape(shapes[i][j]);
 
 				shapes[i][j].moveMode = CIRCLE;
