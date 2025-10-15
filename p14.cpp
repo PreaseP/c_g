@@ -360,6 +360,8 @@ void TimerFunction(int value)
 			for (int j = 0; j < 8; ++j) {
 				if (j == shapes[i].curMid) continue;
 				shapes[i].angle[j] += 0.09f * shapes[i].dir;
+				if (shapes[i].dir == 1 && shapes[i].angle[j] > 2.0f * 3.141592f) shapes[i].angle[j] -= 2.0f * 3.141592f;
+				else if (shapes[i].dir == -1 && shapes[i].angle[j] < -2.0f * 3.141592f) shapes[i].angle[j] += 2.0f * 3.141592f;
 				shapes[i].vPos[j * 3] = curScale * shapes[i].rad[j] * cos(shapes[i].angle[j]) + shapes[i].mid[0];
 				shapes[i].vPos[j * 3 + 1] = curScale * shapes[i].rad[j] * sin(shapes[i].angle[j]) + shapes[i].mid[1];
 			}
