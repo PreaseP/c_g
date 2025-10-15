@@ -153,7 +153,7 @@ void main(int argc, char** argv)
 	glutReshapeFunc(Reshape);
 	glutKeyboardFunc(Keyboard);
 	glutMouseFunc(Mouse);
-	glutTimerFunc(64, TimerFunction, 1);
+	glutTimerFunc(16, TimerFunction, 1);
 	glutMainLoop();
 }
 
@@ -200,7 +200,7 @@ void Keyboard(unsigned char key, int x, int y)
 		s_toggle = d_toggle = false;
 		scaleCnt = 0.0f;
 	}
-	
+
 	glutPostRedisplay();
 }
 
@@ -245,7 +245,7 @@ void make_fragmentShaders()
 }
 
 void make_shaderProgram()
-{	
+{
 	make_vertexShaders();
 	make_fragmentShaders();
 
@@ -347,9 +347,9 @@ GLvoid UpdateShape(Shape& s) {
 void TimerFunction(int value)
 {
 	if (!s_toggle) {
-		if (d_toggle) scaleCnt += 0.2f;
+		if (d_toggle) scaleCnt += 0.05f;
 
-		for (int i =0; i < 2; ++i) {
+		for (int i = 0; i < 2; ++i) {
 			float curScale = shapes[i].scale;
 
 			if (d_toggle) {
@@ -369,7 +369,7 @@ void TimerFunction(int value)
 	}
 
 	glutPostRedisplay();
-	glutTimerFunc(64, TimerFunction, 1);
+	glutTimerFunc(16, TimerFunction, 1);
 }
 
 GLvoid SetShapes(Shape s[])
@@ -378,7 +378,7 @@ GLvoid SetShapes(Shape s[])
 		s[i].mid[0] = -0.5f + (1.0f * i);
 		s[i].mid[1] = 0.0f;
 		s[i].mid[2] = 0.0f;
-		if(s_toggle) s[i].dir = 0;
+		if (s_toggle) s[i].dir = 0;
 		s[i].curMid = -1;
 		s[i].scale = 1.0f;
 
