@@ -246,7 +246,7 @@ void Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-void SpecialKeyboard(int key, int x, int y) 
+void SpecialKeyboard(int key, int x, int y)
 {
 	if (key == GLUT_KEY_UP) {
 		dy += 0.05f;
@@ -360,14 +360,14 @@ GLvoid drawScene()
 	glm::mat4 sRoty = glm::mat4(1.0f);
 	glm::mat4 sRotz = glm::mat4(1.0f);
 	glm::mat4 trans = glm::mat4(1.0f);
-	glm::mat4 sRes = glm::mat4(1.0f);	
+	glm::mat4 sRes = glm::mat4(1.0f);
 
 	sRotx = glm::rotate(sRotx, glm::radians(rotx), glm::vec3(1.0f, 0.0f, 0.0f));
 	sRoty = glm::rotate(sRoty, glm::radians(roty), glm::vec3(0.0f, 1.0f, 0.0f));
 	sRotz = glm::rotate(sRotz, glm::radians(rotz), glm::vec3(0.0f, 0.0f, 1.0f));
 	trans = glm::translate(trans, glm::vec3(dx, dy, 0.0f));
 
-	sRes = trans * sRotz * sRoty * sRotx * res;
+	sRes = res * trans * sRotz * sRoty * sRotx;
 
 	unsigned int modelLoc = glGetUniformLocation(shaderProgramID, "matrix");
 
@@ -375,16 +375,16 @@ GLvoid drawScene()
 
 	int vColor = glGetUniformLocation(shaderProgramID, "vColor");
 
-	for (int i =0; i < 3; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		glUniform3f(vColor, lines[i].color[0], lines[i].color[1], lines[i].color[2]);
 		glBindVertexArray(lines[i].VAO);
 		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 	}
-	
+
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(sRes));
 
 	if (p_toggle) {
-		for (int i =0; i <4; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			glUniform3f(vColor, tris[i].color[0], tris[i].color[1], tris[i].color[2]);
 			glBindVertexArray(tris[i].VAO);
 			glDrawElements(GL_TRIANGLES, 3, GL_UNSIGNED_INT, 0);
@@ -445,7 +445,7 @@ GLvoid InitBuffer()
 
 GLvoid InitBufferAll()
 {
-	for (int i =0; i < 3; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 6; ++j)
 			lines[i].pos[j] = linePos[i][j];
 		i == 0 ? lines[i].color[0] = 1.0f : lines[i].color[0] = 0.0f;
@@ -466,8 +466,8 @@ GLvoid InitBufferAll()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sIndex), sIndex, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 	}
-	
-	for (int i =0; i <4; ++i) {
+
+	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 9; ++j)
 			tris[i].pos[j] = triPos[i][j];
 		tris[i].color[0] = (float)(rand() % 256) / 255.0f;
@@ -489,7 +489,7 @@ GLvoid InitBufferAll()
 		glEnableVertexAttribArray(0);
 	}
 
-	for (int i =0; i <6; ++i) {
+	for (int i = 0; i < 6; ++i) {
 		for (int j = 0; j < 12; ++j)
 			recs[i].pos[j] = recPos[i][j];
 		recs[i].color[0] = (float)(rand() % 256) / 255.0f;

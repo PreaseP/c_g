@@ -136,7 +136,8 @@ GLvoid InitBuffer();
 GLvoid InitBufferAll();
 
 bool p_toggle = false;
-bool h_toggle = false;
+bool h_toggle = true;
+bool u_toggle = true;
 
 float roty = 0.0f;
 float yDir = 0.0f;
@@ -208,16 +209,17 @@ void main(int argc, char** argv)
 	std::cout << "h: 은면 제거/해제" << std::endl;
 	std::cout << "p : 육면체/사각뿔" << std::endl;
 	std::cout << "y : y축 자전/멈춤" << std::endl;
-	std::cout<< "c : 리셋하고 육면체 출력" << std::endl;
-	std::cout<< "q : 프로그램 종료" << std::endl;
-	std::cout<< "---육면체 애니메이션---" << std::endl;
-	std::cout<< "t : 윗면의 가운데 축 (z축)을 중심으로 회전/멈추기" << std::endl;
-	std::cout<< "f : 앞면이 위축을 중심으로 회전하여 열기/닫기" << std::endl;
-	std::cout<< "s : 육면체의 옆면이 중점을 기준으로 제자리에서 회전/멈추기" << std::endl;
-	std::cout<< "b : 뒷면이 제 자리에서 작아지며 없어진다/커진다." << std::endl;
-	std::cout<< "---사각뿔 애니메이션---" << std::endl;
-	std::cout<< "o : 사각뿔의 모든 면들이 함께 연다/닫는다." << std::endl;
-	std::cout<< "r : 사각뿔의 각 면이 한 개씩 연다/닫는다." << std::endl;
+	std::cout << "u : 뒷면 제거 설정/해제" << std::endl;
+	std::cout << "c : 리셋하고 육면체 출력" << std::endl;
+	std::cout << "q : 프로그램 종료" << std::endl;
+	std::cout << "---육면체 애니메이션---" << std::endl;
+	std::cout << "t : 윗면의 가운데 축 (z축)을 중심으로 회전/멈추기" << std::endl;
+	std::cout << "f : 앞면이 위축을 중심으로 회전하여 열기/닫기" << std::endl;
+	std::cout << "s : 육면체의 옆면이 중점을 기준으로 제자리에서 회전/멈추기" << std::endl;
+	std::cout << "b : 뒷면이 제 자리에서 작아지며 없어진다/커진다." << std::endl;
+	std::cout << "---사각뿔 애니메이션---" << std::endl;
+	std::cout << "o : 사각뿔의 모든 면들이 함께 연다/닫는다." << std::endl;
+	std::cout << "r : 사각뿔의 각 면이 한 개씩 연다/닫는다." << std::endl;
 
 	//--- 세이더프로그램만들기
 	glutDisplayFunc(drawScene);
@@ -242,6 +244,9 @@ void Keyboard(unsigned char key, int x, int y)
 			openStepDir = 0.0f;
 			openStepIdx = t_FRONT;
 		}
+	}
+	else if (key == 'u') {
+		u_toggle = !u_toggle;
 	}
 	else if (key == 'h') {
 		h_toggle = !h_toggle;
@@ -289,7 +294,7 @@ void Keyboard(unsigned char key, int x, int y)
 	else if (key == 'b') {
 		if (!backScaleT) {
 			backScaleT = true;
-			if(backScaleDir == 0.0f)
+			if (backScaleDir == 0.0f)
 				backScaleDir = 1.0f;
 		}
 		else {
@@ -326,7 +331,7 @@ void Keyboard(unsigned char key, int x, int y)
 	glutPostRedisplay();
 }
 
-void SpecialKeyboard(int key, int x, int y) 
+void SpecialKeyboard(int key, int x, int y)
 {
 	glutPostRedisplay();
 }
@@ -398,7 +403,7 @@ GLvoid drawScene()
 	//
 	glUseProgram(shaderProgramID);
 
-	if (h_toggle) {
+	if (u_toggle) {
 		glEnable(GL_CULL_FACE);
 		glCullFace(GL_BACK);
 		glFrontFace(GL_CCW);
@@ -407,7 +412,12 @@ GLvoid drawScene()
 		glDisable(GL_CULL_FACE);
 	}
 
-	glEnable(GL_DEPTH_TEST);
+	if (h_toggle) {
+		glEnable(GL_DEPTH_TEST);
+	}
+	else {
+		glDisable(GL_DEPTH_TEST);
+	}
 
 	glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -427,12 +437,12 @@ GLvoid drawScene()
 	glm::mat4 sRoty = glm::mat4(1.0f);
 	glm::mat4 sRotz = glm::mat4(1.0f);
 	glm::mat4 scale = glm::mat4(1.0f);
-	glm::mat4 sRes = glm::mat4(1.0f);	
+	glm::mat4 sRes = glm::mat4(1.0f);
 
 	scale = glm::scale(scale, glm::vec3(0.5f, 0.5f, 0.5f));
 	sRoty = glm::rotate(sRoty, glm::radians(roty), glm::vec3(0.0f, 1.0f, 0.0f));
 
-	sRes = sRoty * scale * res;
+	sRes = res * sRoty * scale;
 
 	unsigned int modelLoc = glGetUniformLocation(shaderProgramID, "matrix");
 
@@ -440,16 +450,16 @@ GLvoid drawScene()
 
 	int vColor = glGetUniformLocation(shaderProgramID, "vColor");
 
-	for (int i =0; i < 3; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		glUniform3f(vColor, lines[i].color[0], lines[i].color[1], lines[i].color[2]);
 		glBindVertexArray(lines[i].VAO);
 		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
 	}
-	
+
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(sRes));
 
 	if (p_toggle) {
-		for (int i =0; i <4; ++i) {
+		for (int i = 0; i < 4; ++i) {
 			glUniform3f(vColor, tris[i].color[0], tris[i].color[1], tris[i].color[2]);
 			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(sRes * tris[i].mat));
 			glBindVertexArray(tris[i].VAO);
@@ -658,7 +668,7 @@ GLvoid InitBuffer()
 
 GLvoid InitBufferAll()
 {
-	for (int i =0; i < 3; ++i) {
+	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 6; ++j)
 			lines[i].pos[j] = linePos[i][j];
 		i == 0 ? lines[i].color[0] = 1.0f : lines[i].color[0] = 0.0f;
@@ -679,8 +689,8 @@ GLvoid InitBufferAll()
 		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sIndex), sIndex, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 	}
-	
-	for (int i =0; i <4; ++i) {
+
+	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 9; ++j)
 			tris[i].pos[j] = triPos[i][j];
 		tris[i].color[0] = (float)(rand() % 256) / 255.0f;
@@ -704,7 +714,7 @@ GLvoid InitBufferAll()
 		glEnableVertexAttribArray(0);
 	}
 
-	for (int i =0; i <6; ++i) {
+	for (int i = 0; i < 6; ++i) {
 		for (int j = 0; j < 12; ++j)
 			recs[i].pos[j] = recPos[i][j];
 		recs[i].color[0] = (float)(rand() % 256) / 255.0f;
