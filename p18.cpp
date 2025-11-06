@@ -297,7 +297,7 @@ void Keyboard(unsigned char key, int x, int y)
 			rotRY_dir = 1;
 			rotY_dir = 1;
 			rotRYY_dir = 0;
-			rotRYY_dir = 0;
+			rotYY_dir = 0;
 			break;
 		}
 	}
@@ -341,7 +341,7 @@ void Keyboard(unsigned char key, int x, int y)
 			rotRY_dir = 0;
 			rotY_dir = 0;
 			rotRYY_dir = 1;
-			rotRYY_dir = 1;
+			rotYY_dir = 1;
 			break;
 		}
 	}
