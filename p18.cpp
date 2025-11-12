@@ -10,8 +10,8 @@
 #include <vector>
 #include <cmath>
 
-#define WinX 1024
-#define WinY 768
+#define WinX 1280
+#define WinY 720
 
 char* filetobuf(const char* file)
 {
