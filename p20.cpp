@@ -102,7 +102,9 @@ enum toggleType { T_TOGGLE = 0, L_TOGGLE, G_TOGGLE, P_TOGGLE, A_TOGGLE, O_TOGGLE
 
 float rotMid = 0.0f;
 float rotGun = 0.0f;
+
 float rotFlag = 0.0f;
+float rotFlagDir = 1.0f;
 
 float rotC = 0.0f;
 float rotCR = 0.0f;
@@ -232,7 +234,7 @@ void Keyboard(unsigned char key, int x, int y)
 }
 
 void SpecialKeyboard(int key, int x, int y)
-{	
+{
 	if (key == GLUT_KEY_UP)      tankPos[1] -= 0.1f; // -z
 	else if (key == GLUT_KEY_DOWN)  tankPos[1] += 0.1f; // +z
 	else if (key == GLUT_KEY_LEFT)  tankPos[0] -= 0.1f; // -x
@@ -328,8 +330,8 @@ GLvoid drawScene()
 	unsigned int projLoc = glGetUniformLocation(shaderProgramID, "projection");
 
 	glm::mat4 vT = glm::rotate(glm::mat4(1.0f), glm::radians(rotC), glm::vec3(0.0f, 1.0f, 0.0f)) *
-					glm::lookAt(cameraPos, cameraDirection, cameraUp) *
-					glm::rotate(glm::mat4(1.0f), glm::radians(rotCR), glm::vec3(0.0f, 1.0f, 0.0f));
+		glm::lookAt(cameraPos, cameraDirection, cameraUp) *
+		glm::rotate(glm::mat4(1.0f), glm::radians(rotCR), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(vT));
 
@@ -360,23 +362,51 @@ GLvoid drawScene()
 
 	// 직육면체(탱크 구성 요소) 그리기
 	for (int i = 0; i < 8; ++i) {
-		if (i == mid)
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(moveMat * cuboids[i].mat * rotMidM));
-		else if (i == gun1)
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(moveMat * cuboids[i].mat * rotMidM * rotGunM1));
-		else if (i == gun2)
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(moveMat * cuboids[i].mat * rotMidM * rotGunM2));
-		else if (i == flag1)
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(moveMat * cuboids[i].mat * rotMidM * rotFlagM1));
-		else if (i == flag2)
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(moveMat * cuboids[i].mat * rotMidM * rotFlagM2));
-		else
-			glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(moveMat * cuboids[i].mat));
+		glm::mat4 modelMat = glm::mat4(1.0f);
+		if (i == bot) {
+			modelMat = moveMat * cuboids[i].mat;
+		}
+		else if (i == mid) {
+			modelMat = moveMat * cuboids[i].mat * rotMidM;
+		}
+		else if (i == top1 || i == top2) {
+			modelMat = moveMat * cuboids[i].mat;
+		}
+		else if (i == gun1) {
+			// 좌측 상부 몸체(top1)를 기준으로 공전
+			glm::mat4 top1Transform = moveMat * cuboids[top1].mat;
+			glm::mat4 gun1LocalTransform = glm::inverse(cuboids[top1].mat) * cuboids[gun1].mat;
+			modelMat = top1Transform * rotGunM1 * gun1LocalTransform;
+		}
+		else if (i == gun2) {
+			// 우측 상부 몸체(top2)를 기준으로 공전
+			glm::mat4 top2Transform = moveMat * cuboids[top2].mat;
+			glm::mat4 gun2LocalTransform = glm::inverse(cuboids[top2].mat) * cuboids[gun2].mat;
+			modelMat = top2Transform * rotGunM2 * gun2LocalTransform;
+		}
+		else if (i == flag1) {
+			// 좌측 상부 몸체(top1)에 부착
+			glm::mat4 top1Transform = moveMat * cuboids[top1].mat;
+			glm::mat4 flag1LocalTransform = glm::inverse(cuboids[top1].mat) * cuboids[flag1].mat;
+			modelMat = top1Transform * rotFlagM1 * flag1LocalTransform;
+		}
+		else if (i == flag2) {
+			// 우측 상부 몸체(top2)에 부착
+			glm::mat4 top2Transform = moveMat * cuboids[top2].mat;
+			glm::mat4 flag2LocalTransform = glm::inverse(cuboids[top2].mat) * cuboids[flag2].mat;
+			modelMat = top2Transform * rotFlagM2 * flag2LocalTransform;
+		}
+		else {
+			modelMat = moveMat * cuboids[i].mat;
+		}
+
+		glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(modelMat));
+
 		for (int f = 0; f < 6; ++f) {
 			glUniform3f(vColor,
-						cuboids[i].recs[f].color[0],
-						cuboids[i].recs[f].color[1],
-						cuboids[i].recs[f].color[2]);
+				cuboids[i].recs[f].color[0],
+				cuboids[i].recs[f].color[1],
+				cuboids[i].recs[f].color[2]);
 			glBindVertexArray(cuboids[i].recs[f].VAO);
 			glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 		}
@@ -384,6 +414,7 @@ GLvoid drawScene()
 
 	glutSwapBuffers();
 }
+
 
 GLvoid Reshape(int w, int h)
 {
@@ -397,14 +428,14 @@ void TimerFunction(int value)
 			rotMid += 0.5f;
 			if (rotMid >= 360.0f) rotMid -= 360.0f;
 		}
-		
+
 		if (moveCnt) {
-			if(moveCnt > 0) {
+			if (moveCnt > 0) {
 				cuboids[top1].mat = glm::translate(cuboids[top1].mat, glm::vec3(+0.2f, 0.0f, 0.0f));
 				cuboids[top2].mat = glm::translate(cuboids[top2].mat, glm::vec3(-0.2f, 0.0f, 0.0f));
 				moveCnt--;
 			}
-			else if(moveCnt < 0) {
+			else if (moveCnt < 0) {
 				cuboids[top1].mat = glm::translate(cuboids[top1].mat, glm::vec3(-0.2f, 0.0f, 0.0f));
 				cuboids[top2].mat = glm::translate(cuboids[top2].mat, glm::vec3(+0.2f, 0.0f, 0.0f));
 				moveCnt++;
@@ -416,8 +447,8 @@ void TimerFunction(int value)
 			if (rotGun >= 360.0f) rotGun -= 360.0f;
 		}
 		if (toggles[P_TOGGLE]) {
-			rotFlag += 1.0f;
-			if (rotFlag >= 360.0f) rotFlag -= 360.0f;
+			rotFlag += 1.0f * rotFlagDir;
+			if (rotFlag >= 60.0f || rotFlag <= -60.0f) rotFlagDir *= -1.0f;
 		}
 		if (toggles[A_TOGGLE]) {
 			rotCR += 0.5f;
@@ -459,87 +490,86 @@ void resetAll() {
 // 새 함수 구현: 8개 직육면체(탱크 형태) 생성
 void InitCuboids()
 {
-    auto setFace = [&](mRec& r, const float* src, const GLfloat col[3]) {
-        for (int k = 0; k < 12; ++k) r.pos[k] = src[k];
-        r.color[0] = col[0];
-        r.color[1] = col[1];
-        r.color[2] = col[2];
+	auto setFace = [&](mRec& r, const float* src, const GLfloat col[3]) {
+		for (int k = 0; k < 12; ++k) r.pos[k] = src[k];
+		r.color[0] = col[0];
+		r.color[1] = col[1];
+		r.color[2] = col[2];
 
-        glGenVertexArrays(1, &r.VAO);
-        glGenBuffers(1, &r.VBO);
-        glBindVertexArray(r.VAO);
+		glGenVertexArrays(1, &r.VAO);
+		glGenBuffers(1, &r.VBO);
+		glBindVertexArray(r.VAO);
 
-        glBindBuffer(GL_ARRAY_BUFFER, r.VBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(r.pos), r.pos, GL_STATIC_DRAW);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, r.VBO);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(r.pos), r.pos, GL_STATIC_DRAW);
+		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
 
-        glGenBuffers(1, &r.EBO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r.EBO);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sIndex), sIndex, GL_STATIC_DRAW);
-        glEnableVertexAttribArray(0);
-    };
+		glGenBuffers(1, &r.EBO);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, r.EBO);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sIndex), sIndex, GL_STATIC_DRAW);
+		glEnableVertexAttribArray(0);
+		};
 
-    // 색상 정의
-    const GLfloat colBase[3]   = {0.30f, 0.30f, 0.30f}; // 바닥(탱크 하부)
-    const GLfloat colMid[3]    = {0.60f, 0.60f, 0.60f}; // 중앙 연결 몸체
-    const GLfloat colBody[3]   = {0.30f, 0.70f, 0.30f}; // 상부 몸체(터렛)
-    const GLfloat colGun[3]    = {0.85f, 0.85f, 0.20f}; // 포신
-    const GLfloat colFlag[3]   = {0.95f, 0.70f, 0.20f}; // 깃대
+	// 색상 정의
+	const GLfloat colBase[3] = { 0.30f, 0.30f, 0.30f }; // 바닥(탱크 하부)
+	const GLfloat colMid[3] = { 0.60f, 0.60f, 0.60f }; // 중앙 연결 몸체
+	const GLfloat colBody[3] = { 0.30f, 0.70f, 0.30f }; // 상부 몸체(터렛)
+	const GLfloat colGun[3] = { 0.85f, 0.85f, 0.20f }; // 포신
+	const GLfloat colFlag[3] = { 0.95f, 0.70f, 0.20f }; // 깃대
 
-    // 각 cuboid의 6면 VAO 생성
-    for (int i = 0; i < 8; ++i) {
-        for (int f = 0; f < 6; ++f) {
-            const GLfloat* chosen =
-                (i == bot)   ? colBase  :
-                (i == mid)   ? colMid   :
-                (i == top1 || i == top2) ? colBody :
-                (i == gun1 || i == gun2) ? colGun  :
-                /* flag1 flag2 */          colFlag;
-            setFace(cuboids[i].recs[f], recPos[f], chosen);
-        }
-        cuboids[i].mat = glm::mat4(1.0f);
-    }
+	// 각 cuboid의 6면 VAO 생성
+	for (int i = 0; i < 8; ++i) {
+		for (int f = 0; f < 6; ++f) {
+			const GLfloat* chosen =
+				(i == bot) ? colBase :
+				(i == mid) ? colMid :
+				(i == top1 || i == top2) ? colBody :
+				(i == gun1 || i == gun2) ? colGun :
+				/* flag1 flag2 */          colFlag;
+			setFace(cuboids[i].recs[f], recPos[f], chosen);
+		}
+		cuboids[i].mat = glm::mat4(1.0f);
+	}
 
-    // 변환 설정 (단위 큐브 기반: -0.5~0.5 범위를 스케일)
-    // 순서: Translate * Rotate * Scale
-    // 1. 하부(넓은 탱크 바닥)
-    cuboids[bot].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, -5.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(6.0f, 1.0f, 3.0f));
+	// 변환 설정 (단위 큐브 기반: -0.5~0.5 범위를 스케일)
+	// 순서: Translate * Rotate * Scale
+	// 1. 하부(넓은 탱크 바닥)
+	cuboids[bot].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, -0.5f, -5.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(6.0f, 1.0f, 3.0f));
 
-    // 2. 중앙 몸체(얇은 플랫폼)
-    cuboids[mid].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.25f, -5.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(4.0f, 0.5f, 1.2f));
+	// 2. 중앙 몸체(얇은 플랫폼)
+	cuboids[mid].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.25f, -5.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(4.0f, 0.5f, 1.2f));
 
-    // 3. 좌측 상부 몸체(터렛)
-    cuboids[top1].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 1.0f, -5.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, 1.2f));
+	// 3. 좌측 상부 몸체(터렛)
+	cuboids[top1].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 1.0f, -5.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, 1.2f));
 
-    // 4. 우측 상부 몸체(터렛)
-    cuboids[top2].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, -5.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, 1.2f));
+	// 4. 우측 상부 몸체(터렛)
+	cuboids[top2].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, -5.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, 1.2f));
 
-    // 5. 좌측 포신 (약간 아래 위치, 전방(Z-)으로 돌출)
-    cuboids[gun1].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 1.0f, -4.3f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.5f)); 
+	// 5. 좌측 포신 (약간 아래 위치, 전방(Z-)으로 돌출)
+	cuboids[gun1].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 1.0f, -4.3f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.5f));
 
-    // 6. 우측 포신
-    cuboids[gun2].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, -4.3f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.5f));
+	// 6. 우측 포신
+	cuboids[gun2].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 1.0f, -4.3f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 0.3f, 1.5f));
 
-    // 7. 좌측 깃대
-    cuboids[flag1].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 2.3f, -5.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 1.5f, 0.3f));
+	// 7. 좌측 깃대
+	cuboids[flag1].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(-1.5f, 2.3f, -5.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 1.5f, 0.3f));
 
-    // 8. 우측 깃대
-    cuboids[flag2].mat =
-        glm::translate(glm::mat4(1.0f), glm::vec3( 1.5f, 2.3f, -5.0f)) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 1.5f, 0.3f));
+	// 8. 우측 깃대
+	cuboids[flag2].mat =
+		glm::translate(glm::mat4(1.0f), glm::vec3(1.5f, 2.3f, -5.0f)) *
+		glm::scale(glm::mat4(1.0f), glm::vec3(0.3f, 1.5f, 0.3f));
 }
-
