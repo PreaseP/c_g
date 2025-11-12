@@ -354,7 +354,9 @@ GLvoid drawScene()
 
 	glm::mat4 moveMat = glm::translate(glm::mat4(1.0f), glm::vec3(tankPos[0], 0.001f, tankPos[1]));
 
-	glm::mat4 rotMidM = glm::rotate(glm::mat4(1.0f), glm::radians(rotMid), glm::vec3(0.0f, 1.0f, 0.0f));
+	glm::mat4 rotMidM = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.25f, -5.0f));
+	rotMidM = glm::rotate(rotMidM, glm::radians(rotMid), glm::vec3(0.0f, 1.0f, 0.0f));
+	rotMidM = glm::translate(rotMidM, glm::vec3(0.0f, -0.25f, 5.0f));
 	glm::mat4 rotGunM1 = glm::rotate(glm::mat4(1.0f), glm::radians(rotGun), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 rotGunM2 = glm::rotate(glm::mat4(1.0f), glm::radians(-rotGun), glm::vec3(0.0f, 1.0f, 0.0f));
 	glm::mat4 rotFlagM1 = glm::rotate(glm::mat4(1.0f), glm::radians(rotFlag), glm::vec3(1.0f, 0.0f, 0.0f));
@@ -367,32 +369,32 @@ GLvoid drawScene()
 			modelMat = moveMat * cuboids[i].mat;
 		}
 		else if (i == mid) {
-			modelMat = moveMat * cuboids[i].mat * rotMidM;
+			modelMat = moveMat * rotMidM * cuboids[i].mat;
 		}
 		else if (i == top1 || i == top2) {
-			modelMat = moveMat * cuboids[i].mat;
+			modelMat = moveMat * rotMidM * cuboids[i].mat;
 		}
 		else if (i == gun1) {
 			// 좌측 상부 몸체(top1)를 기준으로 공전
-			glm::mat4 top1Transform = moveMat * cuboids[top1].mat;
+			glm::mat4 top1Transform = moveMat * rotMidM * cuboids[top1].mat;
 			glm::mat4 gun1LocalTransform = glm::inverse(cuboids[top1].mat) * cuboids[gun1].mat;
 			modelMat = top1Transform * rotGunM1 * gun1LocalTransform;
 		}
 		else if (i == gun2) {
 			// 우측 상부 몸체(top2)를 기준으로 공전
-			glm::mat4 top2Transform = moveMat * cuboids[top2].mat;
+			glm::mat4 top2Transform = moveMat * rotMidM * cuboids[top2].mat;
 			glm::mat4 gun2LocalTransform = glm::inverse(cuboids[top2].mat) * cuboids[gun2].mat;
 			modelMat = top2Transform * rotGunM2 * gun2LocalTransform;
 		}
 		else if (i == flag1) {
 			// 좌측 상부 몸체(top1)에 부착
-			glm::mat4 top1Transform = moveMat * cuboids[top1].mat;
+			glm::mat4 top1Transform = moveMat * rotMidM * cuboids[top1].mat;
 			glm::mat4 flag1LocalTransform = glm::inverse(cuboids[top1].mat) * cuboids[flag1].mat;
 			modelMat = top1Transform * rotFlagM1 * flag1LocalTransform;
 		}
 		else if (i == flag2) {
 			// 우측 상부 몸체(top2)에 부착
-			glm::mat4 top2Transform = moveMat * cuboids[top2].mat;
+			glm::mat4 top2Transform = moveMat * rotMidM * cuboids[top2].mat;
 			glm::mat4 flag2LocalTransform = glm::inverse(cuboids[top2].mat) * cuboids[flag2].mat;
 			modelMat = top2Transform * rotFlagM2 * flag2LocalTransform;
 		}
