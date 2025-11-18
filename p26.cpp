@@ -105,7 +105,7 @@ void main(int argc, char** argv)
 	InitBufferAll();
 	srand(time(NULL));
 	std::cout << "c:  조명색을 다른색으로 바뀌도록 한다. 3종류" << std::endl;
-	std::cout << "m: 조명 켜기/끄기" << std::endl;
+	std::cout << "r/R: 조명의 위치를 중심의 구의 y축에 대하여 양/음 방향으로 회전한다." << std::endl;
 
 	//--- 세이더프로그램만들기
 	glutDisplayFunc(drawScene);
