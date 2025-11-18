@@ -54,10 +54,11 @@ glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 glm::vec3 initLightPos = glm::vec3(0.0f, 0.0f, 2.0f);
 glm::vec3 lightPos = initLightPos;
 
-glm::vec3 colors[3] = {
+glm::vec3 colors[4] = {
 	glm::vec3(1.0f, 1.0f, 1.0f),
 	glm::vec3(0.5f, 1.0f, 0.5f),
-	glm::vec3(0.5f, 0.25f, 0.75f)
+	glm::vec3(0.5f, 0.25f, 0.75f),
+	glm::vec3(0.25f, 0.4f, 0.8f)
 };
 
 int colorIdx = 0;
@@ -103,6 +104,8 @@ void main(int argc, char** argv)
 	// InitBufferAll(); // 주석 처리 또는 삭제
 	InitBufferAll();
 	srand(time(NULL));
+	std::cout << "c:  조명색을 다른색으로 바뀌도록 한다. 3종류" << std::endl;
+	std::cout << "m: 조명 켜기/끄기" << std::endl;
 
 	//--- 세이더프로그램만들기
 	glutDisplayFunc(drawScene);
@@ -117,7 +120,7 @@ void main(int argc, char** argv)
 void Keyboard(unsigned char key, int x, int y)
 {
 	if (key == 'q') exit(0);
-	else if (key == 'c') colorIdx = (colorIdx + 1) % 3;
+	else if (key == 'c') colorIdx = (colorIdx + 1) % 4;
 	else if (key == 'r') rotDir = 1.0f;
 	else if (key == 'R') rotDir = -1.0f;
 	
