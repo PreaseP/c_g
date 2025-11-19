@@ -108,14 +108,14 @@ float triNormal[4][3] = {
 	{-0.8944f, 0.4472f,  0.0f }  // Left
 };
 
- unsigned int sIndex[] = {
- 	0, 1, 2
- };
+unsigned int sIndex[] = {
+   0, 1, 2
+};
 
- unsigned int rIndex[] = {
-	0, 2, 1,
-	0, 3, 2
- };
+unsigned int rIndex[] = {
+   0, 2, 1,
+   0, 3, 2
+};
 
 mLine lines[3];
 mTri tris[4];
@@ -186,6 +186,11 @@ void main(int argc, char** argv)
 	// InitBufferAll(); // 주석 처리 또는 삭제
 	InitBufferAll();
 	srand(time(NULL));
+	std::cout << "n: 육면체/사각뿔그리기" << std::endl;
+	std::cout << "m: 조명켜기/끄기" << std::endl;
+	std::cout << "y: 객체를y축에대하여회전(제자리에서자전)" << std::endl;
+	std::cout << "r: 조명을객체의중심y축에대하여양/음방향으로공전시키기" << std::endl;
+	std::cout << "z/Z: 조명을객체에가깝게/멀게이동하기" << std::endl;
 
 	//--- 세이더프로그램만들기
 	glutDisplayFunc(drawScene);
@@ -207,7 +212,7 @@ void Keyboard(unsigned char key, int x, int y)
 		y_toggle = !y_toggle;
 	}
 	else if (key == 'r' || key == 'R') {
-		if(!rotDir)
+		if (!rotDir)
 			rotDir = 1.0f;
 		else
 			rotDir *= -1.0f;
@@ -303,7 +308,7 @@ GLvoid drawScene()
 	unsigned int viewPosLocation = glGetUniformLocation(shaderProgramID, "viewPos");
 	glUniform3f(viewPosLocation, cameraPos.x, cameraPos.y, cameraPos.z);
 	unsigned int useLightingLocation = glGetUniformLocation(shaderProgramID, "lightingEnabled");
-	
+
 	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -358,7 +363,7 @@ GLvoid drawScene()
 	glm::mat3 normalMatrix = glm::transpose(glm::inverse(glm::mat3(finalModel)));
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(finalModel));
 	glUniformMatrix3fv(normalMatrixLoc, 1, GL_FALSE, glm::value_ptr(normalMatrix));
-	
+
 	if (!n_toggle) {
 		// 1. 정육면체 그리기
 		for (int i = 0; i < 6; ++i) {
@@ -405,17 +410,17 @@ GLvoid Reshape(int w, int h)
 
 void TimerFunction(int value)
 {
-	if(y_toggle) {
+	if (y_toggle) {
 		rotY += 0.5f;
 		if (rotY > 360.0f) rotY -= 360.0f;
 	}
 
-	if(rotDir) {
+	if (rotDir) {
 		rotLY += rotDir * 1.0f;
 		if (rotLY > 360.0f) rotLY -= 360.0f;
 		else if (rotLY < -360.0f) rotLY += 360.0f;
 	}
-	
+
 	glutPostRedisplay();
 	glutTimerFunc(16, TimerFunction, 1);
 }
@@ -548,9 +553,9 @@ void BuildCircle(float radius, int segments, std::vector<float>& verts)
 }
 
 void InitBuffer() {
-	
+
 }
 
 void resetAll() {
-	
+
 }
