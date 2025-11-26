@@ -331,6 +331,11 @@ GLvoid drawScene()
 	glm::mat4 projection = glm::perspective(glm::radians(45.0f), (float)WinX / (float)WinY, 0.1f, 100.0f);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projection));
 
+	// 자전용 코드
+	// glm::mat4 camRotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotCY), glm::vec3(0.0f, 1.0f, 0.0f));
+	// glm::vec3 rotatedDirection = glm::vec3(camRotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f)); // 초기 방향을 (0,0,-1)로 가정
+	// glm::mat4 view = glm::lookAt(cameraPos, cameraPos + rotatedDirection, cameraUp);
+	// 카메라 y축 공전
 	glm::mat4 view = glm::lookAt(cameraPos, cameraDirection, cameraUp)
 		* glm::rotate(glm::mat4(1.0f), glm::radians(rotCY), glm::vec3(0.0f, 1.0f, 0.0f));
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(view));

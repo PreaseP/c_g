@@ -53,14 +53,6 @@ typedef struct REC {
 	glm::mat4 mat;
 } mRec;
 
-float vPositionList[] = {
-	0.0f, 0.5f, 0.0f,
-	-0.5f, -0.5f, 0.5f,
-	0.5f, -0.5f, 0.5f,
-	0.5f, -0.5f, -0.5f,
-	-0.5f, -0.5f, -0.5f
-};
-
 float linePos[3][6] = {
 	{2.0f, 0.0f, 0.0f,
 	-2.0f, 0.0f, 0.0f},
@@ -70,19 +62,17 @@ float linePos[3][6] = {
 	0.0f, 0.0f, -2.0f}
 };
 
-GLuint VAO;
-
 enum triFace { t_FRONT = 0, t_RIGHT, t_BACK, t_LEFT };
 
 float triPos[4][9] = {
 	// Front
-	{ 0.0f,  0.5f,  0.0f,   -0.5f, -0.5f,  -0.5f,    0.5f, -0.5f,  -0.5f },
+	{ 0.0f,  0.5f,  0.0f,   -0.5f, -0.5f,  0.5f,    0.5f, -0.5f,  0.5f },
 	// Right
-	{ 0.0f,  0.5f,  0.0f,    0.5f, -0.5f, -0.5f,    0.5f, -0.5f,  0.5f },
+	{ 0.0f,  0.5f,  0.0f,    0.5f, -0.5f, 0.5f,    0.5f, -0.5f,  -0.5f },
 	// Back
-	{ 0.0f,  0.5f,  0.0f,   0.5f, -0.5f, 0.5f,    -0.5f, -0.5f, 0.5f },
+	{ 0.0f,  0.5f,  0.0f,   0.5f, -0.5f, -0.5f,    -0.5f, -0.5f, -0.5f },
 	// Left
-	{ 0.0f,  0.5f,  0.0f,   -0.5f, -0.5f,  0.5f,   -0.5f, -0.5f, -0.5f }
+	{ 0.0f,  0.5f,  0.0f,   -0.5f, -0.5f, -0.5f,   -0.5f, -0.5f, 0.5f }
 };
 
 enum recFace { r_BOTTOM = 0, r_FRONT, r_RIGHT, r_BACK, r_LEFT, r_TOP };
@@ -106,18 +96,13 @@ mLine lines[3];
 mTri tris[4];
 mRec recs[6];
 
-unsigned int index[] = {
-	0, 1, 2,
-	0, 2, 3,
-	0, 3, 4,
-	0, 4, 1,
-	4, 2, 1,
-	2, 4, 3
+unsigned int sIndex[] = {
+   0, 1, 2
 };
 
-unsigned int sIndex[] = {
-	0, 1, 2,
-	0, 2, 3
+unsigned int rIndex[] = {
+   0, 2, 1,
+   0, 3, 2
 };
 
 GLint sel = 0;
@@ -141,32 +126,27 @@ bool C_toggle = false;
 GLfloat opDis[2];
 GLfloat opVel[2][2];
 
-// 구 렌더링용 전역
 GLuint sphereVAO = 0, sphereVBO = 0, sphereEBO = 0;
 GLsizei sphereIndexCount = 0;
 
 GLuint coneVAO = 0, coneVBO = 0, coneEBO = 0;
 GLsizei coneIndexCount = 0;
 
-// 구 버텍스/인덱스 생성 함수 선언
 void BuildSphere(float radius, int stacks, int slices, std::vector<float>& vertices, std::vector<unsigned int>& indices);
 void BuildCone(float radius, float height, int slices, std::vector<float>& vertices, std::vector<unsigned int>& indices);
 
 void resetAll();
 
-GLvoid InitBuffer();
 GLvoid InitBufferAll();
 
 glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 5.0f);
 glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-// -25, -30, 10
-
 void Mouse(int button, int state, int x, int y);
 void Keyboard(unsigned char key, int x, int y);
 void SpecialKeyboard(int key, int x, int y);
-// void Motion(int x, int y);
+void Motion(int x, int y);
 void TimerFunction(int value);
 
 void make_vertexShaders();
@@ -201,7 +181,6 @@ void main(int argc, char** argv)
 
 	//--- 세이더읽어와서세이더프로그램만들기: 사용자정의함수호출
 	make_shaderProgram();
-	InitBuffer();
 	InitBufferAll();
 	srand(time(NULL));
 	std::cout << "x/X: 객체의 x축에 대하여 각각 양/음 방향으로 회전하기(자전)" << std::endl;
@@ -225,6 +204,7 @@ void main(int argc, char** argv)
 	glutKeyboardFunc(Keyboard);
 	glutSpecialFunc(SpecialKeyboard);
 	glutMouseFunc(Mouse);
+	glutMotionFunc(Motion);
 	glutTimerFunc(16, TimerFunction, 1);
 	glutMainLoop();
 }
@@ -457,16 +437,16 @@ void Keyboard(unsigned char key, int x, int y)
 	}
 	else if (key == 'd') {
 		switch (sel) {
-			case 1:
-				posRX -= 0.1f;
-				break;
-			case 2:
-				posX -= 0.1f;
-				break;
-			case 3:
-				posRX -= 0.1f;
-				posX -= 0.1f;
-				break;
+		case 1:
+			posRX -= 0.1f;
+			break;
+		case 2:
+			posX -= 0.1f;
+			break;
+		case 3:
+			posRX -= 0.1f;
+			posX -= 0.1f;
+			break;
 		}
 	}
 	else if (key == 'D') {
@@ -550,7 +530,7 @@ void SpecialKeyboard(int key, int x, int y)
 }
 
 void Mouse(int button, int state, int x, int y) {
-
+	glutPostRedisplay();
 }
 
 void make_vertexShaders()
@@ -614,51 +594,63 @@ GLvoid drawScene()
 {
 	glUseProgram(shaderProgramID);
 
-	// glEnable(GL_CULL_FACE);
+	glEnable(GL_CULL_FACE);
 	glCullFace(GL_BACK);
 	glFrontFace(GL_CCW);
 	glEnable(GL_DEPTH_TEST);
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
 	unsigned int modelLoc = glGetUniformLocation(shaderProgramID, "model");
 	unsigned int viewLoc = glGetUniformLocation(shaderProgramID, "view");
 	unsigned int projLoc = glGetUniformLocation(shaderProgramID, "projection");
+	unsigned int vColor = glGetUniformLocation(shaderProgramID, "vColor");
 
+	// 기본 축
 	glm::mat4 cord = glm::mat4(1.0f);
 	cord = glm::rotate(cord, glm::radians(25.0f), glm::vec3(1.0f, 0.0f, 0.0f)); // X 회전
 	cord = glm::rotate(cord, glm::radians(-30.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Y 회전
 	cord = glm::rotate(cord, glm::radians(10.0f), glm::vec3(0.0f, 1.0f, 0.0f)); // Z 회전
 
+	// 좌측 도형에 대한 변환 행렬
 	glm::mat4 mT = glm::mat4(1.0f);
-	mT = glm::scale(mT, glm::vec3(scaO, scaO, scaO));
+	mT = glm::scale(mT, glm::vec3(scaO, scaO, scaO)); // 원점에 대해 확대/축소
 	mT = glm::rotate(mT, glm::radians(rotYY), glm::vec3(0.0f, 1.0f, 0.0f)); // Y 공전
-	mT = glm::translate(mT, glm::vec3(posX, posY, 0.0f));
-	mT = glm::scale(mT, glm::vec3(sca, sca, sca));
+	mT = glm::translate(mT, glm::vec3(posX, posY, 0.0f)); // 이동
+	mT = glm::scale(mT, glm::vec3(sca, sca, sca)); // 제자리에서 확대/축소
 	mT = glm::rotate(mT, glm::radians(rotX), glm::vec3(1.0f, 0.0f, 0.0f)); // X 회전
 	mT = glm::rotate(mT, glm::radians(rotY), glm::vec3(0.0f, 1.0f, 0.0f)); // Y 회전
 
+	// 우측 도형에 대한 변환 행렬
 	glm::mat4 rmT = glm::mat4(1.0f);
-	rmT = glm::scale(rmT, glm::vec3(scaRO, scaRO, scaRO));
+	rmT = glm::scale(rmT, glm::vec3(scaRO, scaRO, scaRO)); // 원점에 대해 확대/축소
 	rmT = glm::rotate(rmT, glm::radians(rotRYY), glm::vec3(0.0f, 1.0f, 0.0f)); // Y 공전
-	rmT = glm::translate(rmT, glm::vec3(posRX, posRY, 0.0f));
-	rmT = glm::scale(rmT, glm::vec3(scaR, scaR, scaR));
+	rmT = glm::translate(rmT, glm::vec3(posRX, posRY, 0.0f)); // 이동
+	rmT = glm::scale(rmT, glm::vec3(scaR, scaR, scaR)); // 제자리에서 확대/축소
 	rmT = glm::rotate(rmT, glm::radians(rotRX), glm::vec3(1.0f, 0.0f, 0.0f)); // X 회전
 	rmT = glm::rotate(rmT, glm::radians(rotRY), glm::vec3(0.0f, 1.0f, 0.0f)); // Y 회전
 
+	// 자전용 코드
+	// glm::mat4 camRotationMatrix = glm::rotate(glm::mat4(1.0f), glm::radians(rotCY), glm::vec3(0.0f, 1.0f, 0.0f));
+	// glm::vec3 rotatedDirection = glm::vec3(camRotationMatrix * glm::vec4(0.0f, 0.0f, -1.0f, 1.0f)); // 초기 방향을 (0,0,-1)로 가정
+	// glm::mat4 view = glm::lookAt(cameraPos, cameraPos + rotatedDirection, cameraUp);
+	// 카메라 y축 공전
+	//glm::mat4 view = glm::lookAt(cameraPos, cameraDirection, cameraUp)
+		//* glm::rotate(glm::mat4(1.0f), glm::radians(rotCY), glm::vec3(0.0f, 1.0f, 0.0f));
+
+	// 뷰 행렬
 	glm::mat4 vT = glm::lookAt(cameraPos, cameraDirection, cameraUp);
 	glUniformMatrix4fv(viewLoc, 1, GL_FALSE, &vT[0][0]);
 
+	// 투영 행렬
 	glm::mat4 pT = glm::perspective(glm::radians(45.0f), (float)WinX / (float)WinY, 0.1f, 100.0f);
 	glUniformMatrix4fv(projLoc, 1, GL_FALSE, &pT[0][0]);
 
 	glClearColor(1.0, 1.0, 1.0, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	int vColor = glGetUniformLocation(shaderProgramID, "vColor");
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(cord));
 
 	for (int i = 0; i < 3; ++i) {
+		// 좌표축 그리기
 		glUniform3f(vColor, lines[i].color[0], lines[i].color[1], lines[i].color[2]);
 		glBindVertexArray(lines[i].VAO);
 		glDrawElements(GL_LINES, 2, GL_UNSIGNED_INT, 0);
@@ -674,6 +666,7 @@ GLvoid drawScene()
 		glBindVertexArray(0);
 	}
 	else {
+		// 원뿔 그리기
 		glUniform3f(vColor, 0.95f, 0.6f, 0.2f);
 		glBindVertexArray(coneVAO);
 		glDrawElements(GL_TRIANGLES, coneIndexCount, GL_UNSIGNED_INT, 0);
@@ -682,6 +675,7 @@ GLvoid drawScene()
 	glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(cord * rmT));
 
 	if (!C_toggle) {
+		// 정육면체 그리기
 		glUniform3f(vColor, recs[0].color[0], recs[0].color[1], recs[0].color[2]);
 		for (int i = 0; i < 6; ++i) {
 			glBindVertexArray(recs[i].VAO);
@@ -689,6 +683,7 @@ GLvoid drawScene()
 		}
 	}
 	else {
+		// 사각뿔 그리기
 		glUniform3f(vColor, tris[0].color[0], tris[0].color[1], tris[0].color[2]);
 		for (int i = 0; i < 4; ++i) {
 			glBindVertexArray(tris[i].VAO);
@@ -705,6 +700,10 @@ GLvoid drawScene()
 GLvoid Reshape(int w, int h)
 {
 	glViewport(0, 0, w, h);
+}
+
+void Motion(int x, int y) {
+	glutPostRedisplay();
 }
 
 void TimerFunction(int value)
@@ -802,7 +801,7 @@ void TimerFunction(int value)
 			phaseU = 0;
 		}
 	}
-	
+
 	if (V_toggle) {
 		if (sca < 2.0f) sca += 0.001f;
 		if (scaR > 0.5f) scaR -= 0.001f;
@@ -818,27 +817,9 @@ void TimerFunction(int value)
 	glutTimerFunc(16, TimerFunction, 1);
 }
 
-GLvoid InitBuffer()
-{
-	GLuint VBO_pos, EBO;
-
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO_pos);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO_pos);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vPositionList), vPositionList, GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-
-	glGenBuffers(1, &EBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), index, GL_STATIC_DRAW);
-	glEnableVertexAttribArray(0);
-}
-
 GLvoid InitBufferAll()
 {
+	// 좌표축 (선 생성)
 	for (int i = 0; i < 3; ++i) {
 		for (int j = 0; j < 6; ++j)
 			lines[i].pos[j] = linePos[i][j];
@@ -905,6 +886,7 @@ GLvoid InitBufferAll()
 
 	glBindVertexArray(0);
 
+	// 정육면체
 	for (int i = 0; i < 6; ++i) {
 		for (int j = 0; j < 12; ++j)
 			recs[i].pos[j] = recPos[i][j];
@@ -924,10 +906,11 @@ GLvoid InitBufferAll()
 
 		glGenBuffers(1, &recs[i].EBO);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, recs[i].EBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sIndex), sIndex, GL_STATIC_DRAW);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(rIndex), rIndex, GL_STATIC_DRAW);
 		glEnableVertexAttribArray(0);
 	}
 
+	// 사각뿔
 	for (int i = 0; i < 4; ++i) {
 		for (int j = 0; j < 9; ++j)
 			tris[i].pos[j] = triPos[i][j];
@@ -982,7 +965,7 @@ void BuildSphere(float radius, int stacks, int slices, std::vector<float>& verti
 
 	for (int i = 0; i < stacks; ++i) {
 		for (int j = 0; j < slices; ++j) {
-			unsigned int first  = (unsigned int)(i * (slices + 1) + j);
+			unsigned int first = (unsigned int)(i * (slices + 1) + j);
 			unsigned int second = first + (unsigned int)(slices + 1);
 
 			// CCW 외향
@@ -1000,47 +983,47 @@ void BuildSphere(float radius, int stacks, int slices, std::vector<float>& verti
 // 원뿔 버텍스/인덱스 생성
 void BuildCone(float radius, float height, int slices, std::vector<float>& vertices, std::vector<unsigned int>& indices)
 {
-    const float PI = 3.14159265358979323846f;
-    const float halfH = height * 0.5f;
-    vertices.clear();
-    indices.clear();
+	const float PI = 3.14159265358979323846f;
+	const float halfH = height * 0.5f;
+	vertices.clear();
+	indices.clear();
 
-    // 정점: 0 = 꼭짓점(apex), 1 = 바닥 중심, 2.. = 바닥 링(닫힘 위해 slices+1개)
-    // apex
-    vertices.push_back(0.0f); vertices.push_back(+halfH); vertices.push_back(0.0f);
-    // base center
-    vertices.push_back(0.0f); vertices.push_back(-halfH); vertices.push_back(0.0f);
+	// 정점: 0 = 꼭짓점(apex), 1 = 바닥 중심, 2.. = 바닥 링(닫힘 위해 slices+1개)
+	// apex
+	vertices.push_back(0.0f); vertices.push_back(+halfH); vertices.push_back(0.0f);
+	// base center
+	vertices.push_back(0.0f); vertices.push_back(-halfH); vertices.push_back(0.0f);
 
-    // base ring
-    for (int i = 0; i <= slices; ++i) {
-        float u = (float)i / (float)slices;
-        float theta = u * 2.0f * PI;
-        float x = radius * std::cos(theta);
-        float z = radius * std::sin(theta);
-        vertices.push_back(x);
-        vertices.push_back(-halfH);
-        vertices.push_back(z);
-    }
+	// base ring
+	for (int i = 0; i <= slices; ++i) {
+		float u = (float)i / (float)slices;
+		float theta = u * 2.0f * PI;
+		float x = radius * std::cos(theta);
+		float z = radius * std::sin(theta);
+		vertices.push_back(x);
+		vertices.push_back(-halfH);
+		vertices.push_back(z);
+	}
 
-    // 옆면 삼각형들 (apex, ring[i], ring[i+1])
-    for (int i = 0; i < slices; ++i) {
-        unsigned int apex = 0;
-        unsigned int r0 = 2 + i;
-        unsigned int r1 = 2 + i + 1;
-        indices.push_back(apex);
-        indices.push_back(r0);
-        indices.push_back(r1);
-    }
+	// 옆면 삼각형들 (apex, ring[i], ring[i+1])
+	for (int i = 0; i < slices; ++i) {
+		unsigned int apex = 0;
+		unsigned int r0 = 2 + i;
+		unsigned int r1 = 2 + i + 1;
+		indices.push_back(apex);
+		indices.push_back(r0);
+		indices.push_back(r1);
+	}
 
-    // 바닥 삼각형들 (ring[i+1], ring[i], baseCenter) - 바깥(-Y)을 전면(CCW)로
-    for (int i = 0; i < slices; ++i) {
-        unsigned int baseC = 1;
-        unsigned int r0 = 2 + i;
-        unsigned int r1 = 2 + i + 1;
-        indices.push_back(r1);
-        indices.push_back(r0);
-        indices.push_back(baseC);
-    }
+	// 바닥 삼각형들 (ring[i+1], ring[i], baseCenter) - 바깥(-Y)을 전면(CCW)로
+	for (int i = 0; i < slices; ++i) {
+		unsigned int baseC = 1;
+		unsigned int r0 = 2 + i;
+		unsigned int r1 = 2 + i + 1;
+		indices.push_back(r1);
+		indices.push_back(r0);
+		indices.push_back(baseC);
+	}
 }
 
 void resetAll() {
