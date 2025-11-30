@@ -9,6 +9,7 @@ uniform vec3 lightColor;
 uniform vec3 vColor;
 uniform vec3 viewPos;
 uniform bool lightingEnabled;
+uniform float lightIntensity;
  
 void main ()
 {
@@ -33,7 +34,7 @@ void main ()
 	vec3 specular = specularLight * lightColor;
 
 
-	vec3 result = (ambient + diffuse + specular) * vColor;
+	vec3 result = (ambient + diffuse + specular) * lightIntensity * vColor;
 
 	FragColor = vec4 (result, 1.0f);
 }
